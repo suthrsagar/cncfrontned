@@ -9,6 +9,22 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userToken, setUserToken] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [hasSelectedLanguage, setHasSelectedLanguage] = useState(false);
+
+  // Setup Axios Interceptor for 401 Unauthorized errors
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response && error.response.status === 401) {
+          console.log('Token expired or invalid. Logging out automatically.');
+          await logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
 
   const login = async (email, password) => {
     setIsLoading(true);
@@ -58,8 +74,6 @@ export const AuthProvider = ({ children }) => {
     }
     setIsLoading(false);
   };
-
-  const [hasSelectedLanguage, setHasSelectedLanguage] = useState(false);
 
   const isLoggedIn = async () => {
     try {
