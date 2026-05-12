@@ -1,11 +1,9 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { API_URL } from '../api/config';
 
 export const AuthContext = createContext();
-
-// Render production API URL (matches backend deployment)
-export const API_URL = 'https://cnc-uqjo.onrender.com/api';
 
 export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);

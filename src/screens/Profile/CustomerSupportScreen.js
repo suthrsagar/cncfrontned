@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import axios from 'axios';
-import { API_URL, AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { API_URL } from '../../api/config';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 

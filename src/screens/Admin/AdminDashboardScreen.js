@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { AuthContext, API_URL } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { API_URL } from '../../api/config';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Animated, { FadeInDown } from 'react-native-reanimated';
