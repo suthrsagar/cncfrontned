@@ -49,13 +49,20 @@ const AdminOrderDetailScreen = ({ route, navigation }) => {
   const saveUpdates = async () => {
     setUpdating(true);
     try {
-      await axios.put(`${API_URL}/orders/${orderId}/status`, {
+      const payload = {
         status,
         statusNote,
-        adminNotes,
-        priceQuote: priceQuote !== '' ? Number(priceQuote) : undefined,
-        finalPrice: finalPrice !== '' ? Number(finalPrice) : undefined
-      }, {
+        adminNotes
+      };
+      
+      if (priceQuote && !isNaN(Number(priceQuote))) {
+        payload.priceQuote = Number(priceQuote);
+      }
+      if (finalPrice && !isNaN(Number(finalPrice))) {
+        payload.finalPrice = Number(finalPrice);
+      }
+
+      await axios.put(`${API_URL}/orders/${orderId}/status`, payload, {
         headers: { Authorization: `Bearer ${userToken}` }
       });
       
