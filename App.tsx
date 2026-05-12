@@ -19,7 +19,7 @@ import './src/i18n/i18n';
 
 /* Modern Toast Configuration */
 const toastConfig = {
-  success: (props) => (
+  success: (props: any) => (
     <BaseToast
       {...props}
       style={{ borderLeftColor: COLORS.success, backgroundColor: COLORS.card, ...SHADOWS.dark, borderRadius: 12 }}
@@ -28,7 +28,7 @@ const toastConfig = {
       text2Style={{ fontSize: 13, color: COLORS.secondary }}
     />
   ),
-  error: (props) => (
+  error: (props: any) => (
     <ErrorToast
       {...props}
       style={{ borderLeftColor: COLORS.error, backgroundColor: COLORS.card, ...SHADOWS.dark, borderRadius: 12 }}
@@ -36,7 +36,7 @@ const toastConfig = {
       text2Style={{ fontSize: 13, color: COLORS.secondary }}
     />
   ),
-  customToast: ({ text1, text2, props }) => (
+  customToast: ({ text1, text2, props }: any) => (
     <View style={{ height: 60, width: '90%', backgroundColor: COLORS.primary, borderRadius: 12, padding: 15, ...SHADOWS.glow, justifyContent: 'center' }}>
       <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 16 }}>{text1}</Text>
       {text2 && <Text style={{ color: '#333', fontSize: 13 }}>{text2}</Text>}

@@ -46,22 +46,30 @@ const SavedScreen = ({ navigation }) => {
     }
   };
 
-  const renderDesignCard = ({ item, index }) => (
-    <Animated.View entering={FadeInDown.delay(index * 100).springify()} style={styles.cardContainer}>
-      <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-        <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
-        <View style={styles.cardOverlay}>
-          <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemove(item._id)}>
-            <Icon name="bookmark" size={16} color={COLORS.primary} solid={true} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.cardCategory}>{item.category}</Text>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+  const renderDesignCard = ({ item, index }) => {
+    const displayImage = (item.imageUrls && item.imageUrls.length > 0) ? item.imageUrls[0] : (item.imageUrl || 'https://via.placeholder.com/200');
+    
+    return (
+      <Animated.View entering={FadeInDown.delay(index * 100).springify()} style={styles.cardContainer}>
+        <TouchableOpacity 
+          style={styles.card} 
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('DesignDetails', { design: item })}
+        >
+          <Image source={{ uri: displayImage }} style={styles.cardImage} />
+          <View style={styles.cardOverlay}>
+            <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemove(item._id)}>
+              <Icon name="bookmark" size={16} color={COLORS.primary} solid={true} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.cardCategory}>{item.category}</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
