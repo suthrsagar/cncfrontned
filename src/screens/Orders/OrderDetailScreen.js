@@ -4,10 +4,12 @@ import axios from 'axios';
 import { API_URL, AuthContext } from '../../context/AuthContext';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_STEPS = ['Pending', 'Accepted', 'In Review', 'Design Approved', 'Cutting', 'Polishing', 'Finishing', 'Ready', 'Out for Delivery', 'Delivered'];
 
 const OrderDetailScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const { orderId } = route.params;
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,11 @@ const OrderDetailScreen = ({ route, navigation }) => {
     return COLORS.primary;
   };
 
+  const getTranslatedStatus = (status) => {
+    const key = `status_${status.toLowerCase().replace(' ', '_')}`;
+    return t(key) !== key ? t(key) : status;
+  };
+
   const renderTimeline = (currentStatus, history) => {
     if (currentStatus === 'Cancelled') {
       return (
@@ -64,7 +71,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
                 <View style={[styles.timelineLine, isCompleted && index < currentIndex && styles.timelineLineCompleted]} />
               )}
               <View style={styles.timelineContent}>
-                <Text style={[styles.timelineText, isActive && styles.timelineTextActive]}>{step}</Text>
+                <Text style={[styles.timelineText, isActive && styles.timelineTextActive]}>{getTranslatedStatus(step)}</Text>
                 {historyEntry && (
                   <Text style={styles.timelineTime}>
                     {new Date(historyEntry.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}

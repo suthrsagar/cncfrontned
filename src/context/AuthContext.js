@@ -61,11 +61,19 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   };
 
+  const [hasSelectedLanguage, setHasSelectedLanguage] = useState(false);
+
   const isLoggedIn = async () => {
     try {
       setIsLoading(true);
       let userInfo = await AsyncStorage.getItem('userInfo');
       let userToken = await AsyncStorage.getItem('userToken');
+      let langCheck = await AsyncStorage.getItem('@has_selected_language');
+      
+      if (langCheck === 'true') {
+        setHasSelectedLanguage(true);
+      }
+      
       if (userInfo && userToken) {
         setUserInfo(JSON.parse(userInfo));
         setUserToken(userToken);
@@ -77,12 +85,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const completeLanguageSelection = async () => {
+    await AsyncStorage.setItem('@has_selected_language', 'true');
+    setHasSelectedLanguage(true);
+  };
+
   useEffect(() => {
     isLoggedIn();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ login, logout, register, isLoading, userToken, userInfo }}>
+    <AuthContext.Provider value={{ login, logout, register, isLoading, userToken, userInfo, hasSelectedLanguage, completeLanguageSelection }}>
       {children}
     </AuthContext.Provider>
   );

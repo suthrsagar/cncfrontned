@@ -3,14 +3,26 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Acti
 import { AuthContext } from '../../context/AuthContext';
 import { COLORS, SIZES } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
 
 const LoginScreen = ({ navigation }) => {
+  const { t } = useTranslation();
+  const { showAlert } = useAlert();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading } = useContext(AuthContext);
 
-  const handleLogin = () => {
-    login(email, password);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showAlert({ title: t('warning'), message: t('fill_required'), type: 'warning' });
+      return;
+    }
+    try {
+      await login(email, password);
+    } catch (e) {
+      showAlert({ title: t('error'), message: e.response?.data?.message || e.message, type: 'error' });
+    }
   };
 
   return (
@@ -18,8 +30,8 @@ const LoginScreen = ({ navigation }) => {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.inner}>
         <View style={styles.header}>
           <Icon name="gem" size={50} color={COLORS.primary} style={styles.logo} />
-          <Text style={styles.title}>AuraWood CNC</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+          <Text style={styles.title}>{t('brand_name')}</Text>
+          <Text style={styles.subtitle}>{t('login')} to {t('continue')}</Text>
         </View>
 
         <View style={styles.form}>
@@ -27,7 +39,7 @@ const LoginScreen = ({ navigation }) => {
             <Icon name="envelope" size={20} color={COLORS.secondary} style={styles.icon} />
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t('email')}
               placeholderTextColor={COLORS.secondary}
               value={email}
               onChangeText={setEmail}
@@ -40,7 +52,7 @@ const LoginScreen = ({ navigation }) => {
             <Icon name="lock" size={20} color={COLORS.secondary} style={styles.icon} />
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder={t('password')}
               placeholderTextColor={COLORS.secondary}
               secureTextEntry
               value={password}
@@ -53,13 +65,13 @@ const LoginScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} disabled={isLoading}>
-            {isLoading ? <ActivityIndicator color="#000" /> : <Text style={styles.loginBtnText}>Login</Text>}
+            {isLoading ? <ActivityIndicator color="#000" /> : <Text style={styles.loginBtnText}>{t('login')}</Text>}
           </TouchableOpacity>
 
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
+            <Text style={styles.registerText}>{t('don_have_account')} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerLink}>Sign Up</Text>
+              <Text style={styles.registerLink}>{t('register')}</Text>
             </TouchableOpacity>
           </View>
         </View>

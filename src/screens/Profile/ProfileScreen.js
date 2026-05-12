@@ -1,12 +1,17 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { AuthContext, API_URL } from '../../context/AuthContext';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfileScreen = ({ navigation }) => {
+  const { t, i18n } = useTranslation();
+  const { showAlert } = useAlert();
   const { logout, userToken } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,13 +56,29 @@ const ProfileScreen = ({ navigation }) => {
           });
           
           fetchProfile(); // Refresh profile to get new image URL
+          showAlert({ title: t('success'), message: t('success'), type: 'success' });
         } catch (error) {
-          Alert.alert('Error', 'Failed to upload profile image.');
+          showAlert({ title: t('error'), message: 'Failed to upload image.', type: 'error' });
         } finally {
           setUploadingImage(false);
         }
       }
     });
+  };
+
+  const handleLogout = () => {
+    showAlert({
+      title: t('logout'),
+      message: t('logout_confirm'),
+      type: 'confirm',
+      onConfirm: logout
+    });
+  };
+
+  const toggleLanguage = async () => {
+    const newLang = i18n.language === 'en' ? 'hi' : 'en';
+    await i18n.changeLanguage(newLang);
+    await AsyncStorage.setItem('@app_language', newLang);
   };
 
   const renderMenuItem = (icon, title, color = COLORS.text, onPress = null, showBadge = false) => (
@@ -74,11 +95,11 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile')}</Text>
         {profile?.role === 'admin' && (
           <TouchableOpacity style={styles.adminHeaderBadge} onPress={() => navigation.navigate('AdminDashboard')}>
             <Icon name="user-shield" size={12} color="#000" style={{marginRight: 6}} />
-            <Text style={styles.adminHeaderBadgeText}>Admin Panel</Text>
+            <Text style={styles.adminHeaderBadgeText}>{t('admin')} Panel</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -91,7 +112,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.profileCard}>
             <View style={styles.profileHeaderRow}>
               <View>
-                <Text style={styles.welcomeText}>Welcome back,</Text>
+                <Text style={styles.welcomeText}>{t('welcome_back')}</Text>
                 <Text style={styles.name}>{profile?.name}</Text>
               </View>
               <TouchableOpacity style={styles.avatarContainer} onPress={changeProfileImage}>
@@ -124,40 +145,41 @@ const ProfileScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Account Settings</Text>
+            <Text style={styles.sectionTitle}>{t('account_settings')}</Text>
             <View style={styles.cardBlock}>
-              {renderMenuItem('user-edit', 'Edit Profile')}
-              {renderMenuItem('lock', 'Change Password')}
-              {renderMenuItem('bookmark', 'Saved Designs', COLORS.text, () => navigation.navigate('MainTabs', { screen: 'Saved' }))}
-              {renderMenuItem('box-open', 'Order History', COLORS.text, () => navigation.navigate('MainTabs', { screen: 'Orders' }))}
+              {renderMenuItem('user-edit', t('edit_profile'))}
+              {renderMenuItem('lock', t('change_password'))}
+              {renderMenuItem('bookmark', t('saved_designs'), COLORS.text, () => navigation.navigate('MainTabs', { screen: 'Saved' }))}
+              {renderMenuItem('box-open', t('order_history'), COLORS.text, () => navigation.navigate('MainTabs', { screen: 'Orders' }))}
             </View>
           </View>
 
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Customer Support</Text>
+            <Text style={styles.sectionTitle}>{t('customer_support')}</Text>
             <View style={styles.cardBlock}>
-              {renderMenuItem('headset', 'Chat with Admin', COLORS.primary, () => navigation.navigate('CustomerSupport'), true)}
-              {renderMenuItem('whatsapp', 'WhatsApp Support', '#25D366')}
-              {renderMenuItem('phone', 'Call Support', COLORS.text)}
-              {renderMenuItem('question-circle', 'Help Center')}
+              {renderMenuItem('headset', t('chat_admin'), COLORS.primary, () => navigation.navigate('CustomerSupport'), true)}
+              {renderMenuItem('whatsapp', t('whatsapp_support'), '#25D366')}
+              {renderMenuItem('phone', t('call_support'), COLORS.text)}
+              {renderMenuItem('question-circle', t('help_center'))}
             </View>
           </View>
 
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>More</Text>
+            <Text style={styles.sectionTitle}>{t('more')}</Text>
             <View style={styles.cardBlock}>
-              {renderMenuItem('bell', 'Notification Settings')}
-              {renderMenuItem('palette', 'Theme Settings')}
-              {renderMenuItem('share-alt', 'Share App')}
-              {renderMenuItem('star', 'Rate App')}
-              {renderMenuItem('file-contract', 'Privacy Policy')}
-              {renderMenuItem('info-circle', 'About Workshop')}
+              {renderMenuItem('globe', t('language_settings') + (i18n.language === 'en' ? ' (English)' : ' (हिन्दी)'), COLORS.text, toggleLanguage)}
+              {renderMenuItem('bell', t('notification_settings'))}
+              {renderMenuItem('palette', t('theme_settings'))}
+              {renderMenuItem('share-alt', t('share_app'))}
+              {renderMenuItem('star', t('rate_app'))}
+              {renderMenuItem('file-contract', t('privacy_policy'))}
+              {renderMenuItem('info-circle', t('about_workshop'))}
             </View>
           </View>
 
-          <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
             <Icon name="sign-out-alt" size={18} color={COLORS.error} />
-            <Text style={styles.logoutBtnText}>Log Out</Text>
+            <Text style={styles.logoutBtnText}>{t('logout')}</Text>
           </TouchableOpacity>
           
           <View style={{height: 100}} />

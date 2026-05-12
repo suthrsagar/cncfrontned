@@ -3,29 +3,41 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Acti
 import { AuthContext } from '../../context/AuthContext';
 import { COLORS, SIZES } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
 
 const RegisterScreen = ({ navigation }) => {
+  const { t } = useTranslation();
+  const { showAlert } = useAlert();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const { register, isLoading } = useContext(AuthContext);
 
-  const handleRegister = () => {
-    register(name, email, phone, password);
+  const handleRegister = async () => {
+    if (!name || !email || !phone || !password) {
+      showAlert({ title: t('warning'), message: t('fill_required'), type: 'warning' });
+      return;
+    }
+    try {
+      await register(name, email, phone, password);
+    } catch (e) {
+      showAlert({ title: t('error'), message: e.response?.data?.message || e.message, type: 'error' });
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.inner}>
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Icon name="arrow-left" size={20} color={COLORS.text} />
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join AuraWood CNC</Text>
+            <Text style={styles.title}>{t('register')}</Text>
+            <Text style={styles.subtitle}>Join {t('brand_name')}</Text>
           </View>
 
           <View style={styles.form}>
@@ -33,7 +45,7 @@ const RegisterScreen = ({ navigation }) => {
               <Icon name="user" size={20} color={COLORS.secondary} style={styles.icon} />
               <TextInput
                 style={styles.input}
-                placeholder="Full Name"
+                placeholder={t('name')}
                 placeholderTextColor={COLORS.secondary}
                 value={name}
                 onChangeText={setName}
@@ -44,7 +56,7 @@ const RegisterScreen = ({ navigation }) => {
               <Icon name="envelope" size={20} color={COLORS.secondary} style={styles.icon} />
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder={t('email')}
                 placeholderTextColor={COLORS.secondary}
                 value={email}
                 onChangeText={setEmail}
@@ -57,7 +69,7 @@ const RegisterScreen = ({ navigation }) => {
               <Icon name="phone" size={20} color={COLORS.secondary} style={styles.icon} />
               <TextInput
                 style={styles.input}
-                placeholder="Phone Number"
+                placeholder={t('phone')}
                 placeholderTextColor={COLORS.secondary}
                 value={phone}
                 onChangeText={setPhone}
@@ -69,7 +81,7 @@ const RegisterScreen = ({ navigation }) => {
               <Icon name="lock" size={20} color={COLORS.secondary} style={styles.icon} />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder={t('password')}
                 placeholderTextColor={COLORS.secondary}
                 secureTextEntry
                 value={password}
@@ -78,13 +90,13 @@ const RegisterScreen = ({ navigation }) => {
             </View>
 
             <TouchableOpacity style={styles.registerBtn} onPress={handleRegister} disabled={isLoading}>
-              {isLoading ? <ActivityIndicator color="#000" /> : <Text style={styles.registerBtnText}>Sign Up</Text>}
+              {isLoading ? <ActivityIndicator color="#000" /> : <Text style={styles.registerBtnText}>{t('register')}</Text>}
             </TouchableOpacity>
 
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={styles.loginText}>{t('already_have_account')} </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginLink}>Login</Text>
+                <Text style={styles.loginLink}>{t('login')}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -5,6 +5,7 @@ import { API_URL, AuthContext } from '../../context/AuthContext';
 import { COLORS, SIZES, SHADOWS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 const cardWidth = width / 2 - 25;
@@ -12,6 +13,7 @@ const cardWidth = width / 2 - 25;
 const categories = ['All', 'Door Designs', 'Wall Art', 'Temple Designs', 'Name Plates', 'Furniture', 'Mandala'];
 
 const ExploreScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -41,7 +43,6 @@ const ExploreScreen = ({ navigation }) => {
       await axios.put(`${API_URL}/users/save-design/${id}`, {}, {
         headers: { Authorization: `Bearer ${userToken}` }
       });
-      // Toggle logic would ideally sync with global state or refetch profile
     } catch (error) {
       console.error('Save design error:', error);
     }
@@ -93,8 +94,8 @@ const ExploreScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Welcome to</Text>
-          <Text style={styles.brandName}>AuraWood CNC</Text>
+          <Text style={styles.greeting}>{t('welcome_to')}</Text>
+          <Text style={styles.brandName}>{t('brand_name')}</Text>
         </View>
         <TouchableOpacity style={styles.notificationBtn}>
           <Icon name="bell" size={20} color={COLORS.text} />
@@ -106,7 +107,7 @@ const ExploreScreen = ({ navigation }) => {
         <Icon name="search" size={18} color={COLORS.secondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search premium designs..."
+          placeholder={t('search_designs')}
           placeholderTextColor={COLORS.secondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -139,7 +140,7 @@ const ExploreScreen = ({ navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Icon name="box-open" size={50} color={COLORS.surfaceLight} />
-              <Text style={styles.emptyText}>No designs found.</Text>
+              <Text style={styles.emptyText}>{t('no_designs_found')}</Text>
             </View>
           }
         />

@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator, TextInput, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator, TextInput, ScrollView, Image } from 'react-native';
 import axios from 'axios';
 import { API_URL, AuthContext } from '../../context/AuthContext';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useTranslation } from 'react-i18next';
+import { useAlert } from '../../context/AlertContext';
 
 const OrdersScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
+  const { showAlert } = useAlert();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -57,7 +61,7 @@ const OrdersScreen = ({ route, navigation }) => {
 
   const submitOrder = async () => {
     if (!width || !height || !material || (!customImage && !referenceDesign)) {
-      Alert.alert('Error', 'Please fill all required fields and select an image.');
+      showAlert({ title: t('error'), message: t('fill_required'), type: 'error' });
       return;
     }
     setSubmitting(true);
@@ -101,13 +105,13 @@ const OrdersScreen = ({ route, navigation }) => {
         });
       }
       
-      Alert.alert('Success', 'Order created successfully!');
+      showAlert({ title: t('success'), message: t('order_success'), type: 'success' });
       setIsCreating(false);
       // Reset form
       setWidth(''); setHeight(''); setMaterial(''); setNotes(''); setCustomImage(null); setReferenceDesign(null);
       fetchOrders();
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Something went wrong');
+      showAlert({ title: t('error'), message: error.response?.data?.message || 'Something went wrong', type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -128,26 +132,9 @@ const OrdersScreen = ({ route, navigation }) => {
     }
   };
 
-  const renderTimeline = (currentStatus) => {
-    const currentIndex = STATUS_STEPS.indexOf(currentStatus);
-    
-    return (
-      <View style={styles.timelineContainer}>
-        {STATUS_STEPS.map((step, index) => {
-          const isCompleted = index <= currentIndex;
-          const isActive = index === currentIndex;
-          return (
-            <View key={step} style={styles.timelineStep}>
-              <View style={[styles.timelineDot, isCompleted && styles.timelineDotCompleted, isActive && styles.timelineDotActive]} />
-              {index < STATUS_STEPS.length - 1 && (
-                <View style={[styles.timelineLine, isCompleted && index < currentIndex && styles.timelineLineCompleted]} />
-              )}
-              <Text style={[styles.timelineText, isActive && styles.timelineTextActive]}>{step}</Text>
-            </View>
-          );
-        })}
-      </View>
-    );
+  const getTranslatedStatus = (status) => {
+    const key = `status_${status.toLowerCase().replace(' ', '_')}`;
+    return t(key) !== key ? t(key) : status;
   };
 
   const renderOrderItem = ({ item, index }) => {
@@ -157,7 +144,7 @@ const OrdersScreen = ({ route, navigation }) => {
           <View style={styles.orderHeader}>
             <Text style={styles.orderId}>Order #{item._id.slice(-6).toUpperCase()}</Text>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-              <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+              <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getTranslatedStatus(item.status)}</Text>
             </View>
           </View>
           <View style={styles.orderDetails}>
@@ -172,9 +159,9 @@ const OrdersScreen = ({ route, navigation }) => {
           </View>
           
           <View style={styles.orderFooter}>
-            <Text style={styles.price}>₹{item.priceQuote || 'Pending Quote'}</Text>
+            <Text style={styles.price}>₹{item.priceQuote || '---'}</Text>
             <TouchableOpacity style={styles.trackBtn} onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}>
-              <Text style={styles.trackBtnText}>Track Order</Text>
+              <Text style={styles.trackBtnText}>{t('track_order')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -189,7 +176,7 @@ const OrdersScreen = ({ route, navigation }) => {
           <TouchableOpacity onPress={() => { setIsCreating(false); setReferenceDesign(null); setCustomImage(null); }} style={styles.backBtn}>
             <Icon name="arrow-left" size={20} color={COLORS.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Create Custom Order</Text>
+          <Text style={styles.headerTitle}>{t('create_custom_order')}</Text>
         </View>
         <ScrollView style={styles.formContainer}>
           <TouchableOpacity style={styles.imageUpload} onPress={selectImage}>
@@ -200,29 +187,29 @@ const OrdersScreen = ({ route, navigation }) => {
             ) : (
               <View style={styles.uploadPlaceholder}>
                 <Icon name="cloud-upload-alt" size={40} color={COLORS.primary} />
-                <Text style={styles.uploadText}>{referenceDesign ? 'Tap to change image' : 'Upload Reference Image'}</Text>
+                <Text style={styles.uploadText}>{referenceDesign ? t('change_image') : t('upload_image')}</Text>
               </View>
             )}
           </TouchableOpacity>
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-              <Text style={styles.label}>Width (inches)</Text>
+              <Text style={styles.label}>{t('width_inches')}</Text>
               <TextInput style={styles.input} keyboardType="numeric" value={width} onChangeText={setWidth} placeholderTextColor={COLORS.secondary} placeholder="e.g. 24" />
             </View>
             <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Height (inches)</Text>
+              <Text style={styles.label}>{t('height_inches')}</Text>
               <TextInput style={styles.input} keyboardType="numeric" value={height} onChangeText={setHeight} placeholderTextColor={COLORS.secondary} placeholder="e.g. 48" />
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Material</Text>
+            <Text style={styles.label}>{t('material')}</Text>
             <TextInput style={styles.input} value={material} onChangeText={setMaterial} placeholderTextColor={COLORS.secondary} placeholder="e.g. MDF, Teak Wood, Acrylic" />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Additional Notes (Optional)</Text>
+            <Text style={styles.label}>{t('additional_notes')}</Text>
             <TextInput 
               style={[styles.input, styles.textArea]} 
               multiline 
@@ -230,12 +217,12 @@ const OrdersScreen = ({ route, navigation }) => {
               value={notes} 
               onChangeText={setNotes} 
               placeholderTextColor={COLORS.secondary} 
-              placeholder="Any specific design instructions..." 
+              placeholder="..." 
             />
           </View>
 
           <TouchableOpacity style={styles.submitBtn} onPress={submitOrder} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#000" /> : <Text style={styles.submitBtnText}>Submit Order</Text>}
+            {submitting ? <ActivityIndicator color="#000" /> : <Text style={styles.submitBtnText}>{t('submit_order')}</Text>}
           </TouchableOpacity>
           <View style={{height: 100}} />
         </ScrollView>
@@ -246,10 +233,10 @@ const OrdersScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Orders</Text>
+        <Text style={styles.headerTitle}>{t('my_orders')}</Text>
         <TouchableOpacity style={styles.createBtn} onPress={() => setIsCreating(true)}>
           <Icon name="plus" size={16} color="#000" />
-          <Text style={styles.createBtnText}>New Order</Text>
+          <Text style={styles.createBtnText}>{t('new_order')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -267,7 +254,7 @@ const OrdersScreen = ({ route, navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Icon name="clipboard-list" size={50} color={COLORS.surfaceLight} />
-              <Text style={styles.emptyText}>No orders yet.</Text>
+              <Text style={styles.emptyText}>{t('no_orders_yet')}</Text>
             </View>
           }
         />

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 const DesignDetailsScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const { design } = route.params;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -92,7 +94,7 @@ const DesignDetailsScreen = ({ route, navigation }) => {
 
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.orderBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'Orders', params: { referenceDesign: design } })}>
-          <Text style={styles.orderBtnText}>Request Custom Order</Text>
+          <Text style={styles.orderBtnText}>{t('request_custom_order')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
