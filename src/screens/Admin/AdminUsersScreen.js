@@ -5,38 +5,77 @@ import { AuthContext } from '../../context/AuthContext';
 import { API_URL } from '../../api/config';
 import { COLORS, SIZES, SHADOWS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useAlert } from '../../context/AlertContext';
 
 const AdminUsersScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { userToken } = useContext(AuthContext);
+  const { showAlert } = useAlert();
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/users/all`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      setUsers(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/users/all`, {
-          headers: { Authorization: `Bearer ${userToken}` }
-        });
-        setUsers(res.data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchUsers();
   }, []);
+
+  const handleToggleAdmin = async (userId) => {
+    try {
+      await axios.put(`${API_URL}/users/${userId}/admin`, {}, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      fetchUsers();
+      showAlert({ title: 'Success', message: 'User role updated', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      showAlert({ title: 'Error', message: 'Failed to update role', type: 'error' });
+    }
+  };
+
+  const handleToggleBan = async (userId) => {
+    try {
+      await axios.put(`${API_URL}/users/${userId}/block`, {}, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      fetchUsers();
+      showAlert({ title: 'Success', message: 'User ban status updated', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      showAlert({ title: 'Error', message: 'Failed to update ban status', type: 'error' });
+    }
+  };
 
   const renderUserItem = ({ item }) => (
     <View style={styles.userCard}>
       <View style={styles.iconContainer}>
-        <Icon name="user" size={24} color={COLORS.primary} />
+        <Icon name="user" size={24} color={item.role === 'blocked' ? COLORS.error : COLORS.primary} />
       </View>
       <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.name} {item.role === 'admin' ? '(Admin)' : ''}</Text>
+        <Text style={styles.userName}>{item.name} {item.role === 'admin' ? '(Admin)' : item.role === 'blocked' ? '(Banned)' : ''}</Text>
         <Text style={styles.userDetail}>{item.email}</Text>
         <Text style={styles.userDetail}>{item.phone}</Text>
       </View>
+      {item.email !== 'sutharsagar710@gmail.com' && (
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => handleToggleAdmin(item._id)}>
+            <Icon name="user-shield" size={16} color={item.role === 'admin' ? COLORS.primary : COLORS.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => handleToggleBan(item._id)}>
+            <Icon name="ban" size={16} color={item.role === 'blocked' ? COLORS.error : COLORS.secondary} />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
@@ -73,7 +112,9 @@ const styles = StyleSheet.create({
   iconContainer: { width: 50, height: 50, borderRadius: 25, backgroundColor: COLORS.glassBackground, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   userInfo: { flex: 1 },
   userName: { color: COLORS.text, fontSize: SIZES.fontLg, fontWeight: 'bold', marginBottom: 2 },
-  userDetail: { color: COLORS.secondary, fontSize: SIZES.fontSm }
+  userDetail: { color: COLORS.secondary, fontSize: SIZES.fontSm },
+  actions: { flexDirection: 'row', alignItems: 'center' },
+  actionBtn: { padding: 10, marginLeft: 5, backgroundColor: COLORS.glassBackground, borderRadius: 8 }
 });
 
 export default AdminUsersScreen;

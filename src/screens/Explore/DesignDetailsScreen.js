@@ -3,6 +3,11 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Ima
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import { AuthContext } from '../../context/AuthContext';
+import { API_URL } from '../../api/config';
+import { useFocusEffect } from '@react-navigation/native';
+import { useAlert } from '../../context/AlertContext';
 
 const { width } = Dimensions.get('window');
 
@@ -10,6 +15,48 @@ const DesignDetailsScreen = ({ route, navigation }) => {
   const { t } = useTranslation();
   const { design } = route.params;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const { userToken } = React.useContext(AuthContext);
+  const { showAlert } = useAlert();
+
+  const fetchSavedStatus = async () => {
+    if (!userToken) return;
+    try {
+      const res = await axios.get(`${API_URL}/users/profile`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      const ids = res.data.savedDesigns.map(d => typeof d === 'object' ? d._id : d);
+      setIsSaved(ids.includes(design._id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchSavedStatus();
+    }, [userToken])
+  );
+
+  const handleSaveToggle = async () => {
+    try {
+      const res = await axios.put(`${API_URL}/users/save-design/${design._id}`, {}, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      const ids = res.data.map(d => typeof d === 'object' ? d._id : d);
+      const currentlySaved = ids.includes(design._id);
+      setIsSaved(currentlySaved);
+      
+      showAlert({ 
+        title: currentlySaved ? (t('success') || 'Success') : (t('info') || 'Info'), 
+        message: currentlySaved ? (t('design_saved') || 'Design saved successfully') : (t('design_removed') || 'Design removed from saved'), 
+        type: currentlySaved ? 'success' : 'info' 
+      });
+    } catch (error) {
+      console.error('Save design error:', error);
+      showAlert({ title: t('error') || 'Error', message: 'Failed to save design', type: 'error' });
+    }
+  };
 
   const images = design.imageUrls && design.imageUrls.length > 0 
     ? design.imageUrls 
@@ -28,8 +75,8 @@ const DesignDetailsScreen = ({ route, navigation }) => {
           <Icon name="arrow-left" size={20} color={COLORS.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Design Details</Text>
-        <TouchableOpacity style={styles.saveBtn}>
-          <Icon name="bookmark" size={20} color={COLORS.text} />
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveToggle}>
+          <Icon name="bookmark" size={20} color={isSaved ? COLORS.primary : COLORS.text} solid={isSaved} />
         </TouchableOpacity>
       </View>
 
