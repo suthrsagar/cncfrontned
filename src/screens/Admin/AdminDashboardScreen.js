@@ -4,8 +4,9 @@ import { AuthContext } from '../../context/AuthContext';
 import { API_URL } from '../../api/config';
 import { COLORS, SIZES, SHADOWS, FONTS } from '../../theme/theme';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import axios from 'axios';
+import AnimatedTouchable from '../../components/AnimatedTouchable';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const { userInfo, userToken } = useContext(AuthContext);
@@ -28,32 +29,32 @@ const AdminDashboardScreen = ({ navigation }) => {
     fetchStats();
   }, []);
 
-  const renderStatCard = (title, value, icon, color) => (
-    <View style={styles.statCard}>
+  const renderStatCard = (title, value, icon, color, index) => (
+    <Animated.View entering={FadeInRight.delay(index * 100).springify()} style={styles.statCard}>
       <Icon name={icon} size={24} color={color} style={styles.statIcon} />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statTitle}>{title}</Text>
-    </View>
+    </Animated.View>
   );
 
   const renderDashboardLink = (title, icon, route, index, params) => (
     <Animated.View entering={FadeInDown.delay(index * 100).springify()}>
-      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(route, params)}>
+      <AnimatedTouchable style={styles.card} onPress={() => navigation.navigate(route, params)} scaleTo={0.97}>
         <View style={styles.iconContainer}>
           <Icon name={icon} size={24} color={COLORS.primary} />
         </View>
         <Text style={styles.cardTitle}>{title}</Text>
         <Icon name="chevron-right" size={16} color={COLORS.secondary} style={styles.arrow} />
-      </TouchableOpacity>
+      </AnimatedTouchable>
     </Animated.View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{marginRight: 15}}>
+        <AnimatedTouchable onPress={() => navigation.goBack()} style={{marginRight: 15}} scaleTo={0.8}>
           <Icon name="arrow-left" size={20} color={COLORS.text} />
-        </TouchableOpacity>
+        </AnimatedTouchable>
         <View>
           <Text style={styles.greeting}>Admin Dashboard</Text>
           <Text style={styles.adminName}>{userInfo?.name}</Text>
@@ -63,12 +64,12 @@ const AdminDashboardScreen = ({ navigation }) => {
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />
       ) : (
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.statsContainer}>
-            {renderStatCard('Total Users', stats?.totalUsers || 0, 'users', '#3b82f6')}
-            {renderStatCard('Total Orders', stats?.totalOrders || 0, 'box', COLORS.primary)}
-            {renderStatCard('Pending', stats?.pendingOrders || 0, 'clock', '#f59e0b')}
-            {renderStatCard('Completed', stats?.completedOrders || 0, 'check-circle', COLORS.success)}
+            {renderStatCard('Total Users', stats?.totalUsers || 0, 'users', '#3b82f6', 1)}
+            {renderStatCard('Total Orders', stats?.totalOrders || 0, 'box', COLORS.primary, 2)}
+            {renderStatCard('Pending', stats?.pendingOrders || 0, 'clock', '#f59e0b', 3)}
+            {renderStatCard('Completed', stats?.completedOrders || 0, 'check-circle', COLORS.success, 4)}
           </View>
 
           <Text style={styles.sectionTitle}>Management Tools</Text>
@@ -77,8 +78,9 @@ const AdminDashboardScreen = ({ navigation }) => {
           {renderDashboardLink('Manage Designs', 'images', 'MainTabs', 3, { screen: 'Explore' })} 
           {renderDashboardLink('Upload New Design', 'upload', 'AdminAddPost', 4)}
           {renderDashboardLink('Manage Users', 'users-cog', 'AdminUsers', 5)}
-          {renderDashboardLink('Manage Banners', 'image', 'AdminBanners', 6)}
-          {renderDashboardLink('Admin Settings', 'cog', 'AdminSettings', 7)}
+          {renderDashboardLink('Send Push Notifications', 'bell', 'AdminNotifications', 6)}
+          {renderDashboardLink('Manage Banners', 'image', 'AdminBanners', 7)}
+          {renderDashboardLink('Admin Settings', 'cog', 'AdminSettings', 8)}
         </ScrollView>
       )}
     </SafeAreaView>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { StatusBar, View, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { StatusBar, View, Text, PermissionsAndroid, Platform, Alert } from 'react-native';
 // @ts-ignore
 import { AuthProvider } from './src/context/AuthContext';
 // @ts-ignore
@@ -8,6 +8,8 @@ import AppNav from './src/navigation/AppNav';
 import { COLORS, SHADOWS, FONTS } from './src/theme/theme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import messaging from '@react-native-firebase/messaging';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 
 // Custom Contexts
 // @ts-ignore
@@ -45,6 +47,70 @@ const toastConfig = {
 };
 
 const App = () => {
+
+  useEffect(() => {
+    async function setupNotifications() {
+      try {
+        // 1. Request permissions for iOS
+        if (Platform.OS === 'ios') {
+          await messaging().requestPermission();
+        } else if (Platform.OS === 'android' && Platform.Version >= 33) {
+          await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+        }
+
+        // 2. Get FCM Token
+        const token = await messaging().getToken();
+        console.log('FCM Token:', token);
+        // You should send this token to your backend to save against the user profile
+
+        // 3. Create Android Channel for Notifee
+        const channelId = await notifee.createChannel({
+          id: 'default',
+          name: 'Default Channel',
+          importance: AndroidImportance.HIGH,
+        });
+
+        // 4. Handle Foreground Messages
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          console.log('A new FCM message arrived in foreground!', remoteMessage);
+          
+          // Display a local notification via Notifee
+          await notifee.displayNotification({
+            title: remoteMessage.notification?.title || 'New Notification',
+            body: remoteMessage.notification?.body || '',
+            android: {
+              channelId,
+              smallIcon: 'ic_launcher', // Update with your actual small icon
+              pressAction: {
+                id: 'default',
+              },
+            },
+          });
+        });
+
+        // 5. Handle Notification opening app from background
+        messaging().onNotificationOpenedApp(remoteMessage => {
+          console.log('Notification caused app to open from background state:', remoteMessage.notification);
+          // Handle Navigation here
+        });
+
+        // 6. Handle Notification opening app from quit state
+        messaging().getInitialNotification().then(remoteMessage => {
+          if (remoteMessage) {
+            console.log('Notification caused app to open from quit state:', remoteMessage.notification);
+            // Handle Navigation here
+          }
+        });
+
+        return unsubscribe;
+      } catch (error) {
+        console.log('Error setting up notifications', error);
+      }
+    }
+
+    setupNotifications();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.background }}>
       <SafeAreaProvider>

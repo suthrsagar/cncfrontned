@@ -8,6 +8,8 @@ import { AuthContext } from '../../context/AuthContext';
 import { API_URL } from '../../api/config';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAlert } from '../../context/AlertContext';
+import AnimatedTouchable from '../../components/AnimatedTouchable';
+import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -70,15 +72,15 @@ const DesignDetailsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
+        <AnimatedTouchable onPress={() => navigation.goBack()} style={styles.backBtn} scaleTo={0.8}>
           <Icon name="arrow-left" size={20} color={COLORS.text} />
-        </TouchableOpacity>
+        </AnimatedTouchable>
         <Text style={styles.headerTitle}>Design Details</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveToggle}>
+        <AnimatedTouchable style={styles.saveBtn} onPress={handleSaveToggle} scaleTo={0.8}>
           <Icon name="bookmark" size={20} color={isSaved ? COLORS.primary : COLORS.text} solid={isSaved} />
-        </TouchableOpacity>
-      </View>
+        </AnimatedTouchable>
+      </Animated.View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.carouselContainer}>
@@ -90,7 +92,7 @@ const DesignDetailsScreen = ({ route, navigation }) => {
             scrollEventThrottle={16}
           >
             {images.map((img, idx) => (
-              <Image key={idx} source={{ uri: img }} style={styles.image} />
+              <Animated.Image entering={FadeIn.duration(500).delay(idx * 100)} key={idx} source={{ uri: img }} style={styles.image} />
             ))}
           </ScrollView>
           
@@ -106,7 +108,7 @@ const DesignDetailsScreen = ({ route, navigation }) => {
           )}
         </View>
 
-        <View style={styles.detailsContainer}>
+        <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.detailsContainer}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{design.title}</Text>
             {design.isFeatured && (
@@ -136,14 +138,14 @@ const DesignDetailsScreen = ({ route, navigation }) => {
           <Text style={styles.description}>
             {design.description || "No description provided for this design."}
           </Text>
-        </View>
+        </Animated.View>
       </ScrollView>
 
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.orderBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'Orders', params: { referenceDesign: design } })}>
+      <Animated.View entering={FadeInDown.duration(500).delay(300)} style={styles.bottomBar}>
+        <AnimatedTouchable style={styles.orderBtn} scaleTo={0.97} onPress={() => navigation.navigate('MainTabs', { screen: 'Orders', params: { referenceDesign: design } })}>
           <Text style={styles.orderBtnText}>{t('request_custom_order')}</Text>
-        </TouchableOpacity>
-      </View>
+        </AnimatedTouchable>
+      </Animated.View>
     </SafeAreaView>
   );
 };

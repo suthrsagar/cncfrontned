@@ -37,7 +37,7 @@ const AdminSettingsScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Workshop Info</Text>
         {renderSettingItem('whatsapp', 'WhatsApp Number', '+91 98765 43210')}
         {renderSettingItem('map-marker-alt', 'Workshop Address', 'Update location details')}
-        {renderSettingItem('instagram', 'Instagram Link', '@aurawoodcnc')}
+        {renderSettingItem('instagram', 'Instagram Link', '@woodcraftcnc')}
 
         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <Icon name="sign-out-alt" size={20} color="#000" style={{marginRight: 10}} />

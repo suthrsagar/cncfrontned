@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '../api/config';
+import messaging from '@react-native-firebase/messaging';
 
 export const AuthContext = createContext();
 
@@ -26,6 +27,21 @@ export const AuthProvider = ({ children }) => {
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
+  const syncFcmToken = async (token) => {
+    try {
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        // Run axios without awaiting to prevent blocking
+        axios.put(`${API_URL}/users/profile/fcm-token`, { token: fcmToken }, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(() => console.log('FCM Token synced with backend'))
+          .catch(err => console.log('Backend sync failed:', err.message));
+      }
+    } catch (err) {
+      console.log('Error getting FCM Token:', err);
+    }
+  };
+
   const login = async (email, password) => {
     setIsLoading(true);
     try {
@@ -35,6 +51,7 @@ export const AuthProvider = ({ children }) => {
         setUserToken(res.data.token);
         await AsyncStorage.setItem('userInfo', JSON.stringify(res.data));
         await AsyncStorage.setItem('userToken', res.data.token);
+        syncFcmToken(res.data.token); // Don't await
       }
     } catch (e) {
       console.error('Login error:', e.response?.data?.message || e.message);
@@ -53,6 +70,7 @@ export const AuthProvider = ({ children }) => {
         setUserToken(res.data.token);
         await AsyncStorage.setItem('userInfo', JSON.stringify(res.data));
         await AsyncStorage.setItem('userToken', res.data.token);
+        syncFcmToken(res.data.token); // Don't await
       }
     } catch (e) {
       console.error('Register error:', e.response?.data?.message || e.message);
@@ -89,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       if (userInfo && userToken) {
         setUserInfo(JSON.parse(userInfo));
         setUserToken(userToken);
+        syncFcmToken(userToken); // Don't await so app boots instantly
       }
     } catch (e) {
       console.error(e);

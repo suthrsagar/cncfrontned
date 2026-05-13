@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, Modal, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { COLORS, SIZES, FONTS, SHADOWS } from '../theme/theme';
+import AnimatedTouchable from '../components/AnimatedTouchable';
 
 export const AlertContext = createContext();
 
@@ -28,9 +29,10 @@ export const AlertProvider = ({ children }) => {
       confirmText: config.confirmText || 'OK',
       cancelText: config.cancelText || 'Cancel'
     });
-    Animated.timing(fadeAnim, {
+    Animated.spring(fadeAnim, {
       toValue: 1,
-      duration: 300,
+      friction: 8,
+      tension: 40,
       useNativeDriver: true
     }).start();
   };
@@ -79,16 +81,17 @@ export const AlertProvider = ({ children }) => {
             
             <View style={styles.btnRow}>
               {alertConfig.type === 'confirm' && (
-                <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={handleCancel}>
+                <AnimatedTouchable style={[styles.btn, styles.cancelBtn]} onPress={handleCancel} scaleTo={0.95}>
                   <Text style={styles.cancelBtnText}>{alertConfig.cancelText}</Text>
-                </TouchableOpacity>
+                </AnimatedTouchable>
               )}
-              <TouchableOpacity 
+              <AnimatedTouchable 
                 style={[styles.btn, { backgroundColor: iconConfig.color }]} 
                 onPress={handleConfirm}
+                scaleTo={0.95}
               >
                 <Text style={styles.confirmBtnText}>{alertConfig.confirmText}</Text>
-              </TouchableOpacity>
+              </AnimatedTouchable>
             </View>
           </Animated.View>
         </View>

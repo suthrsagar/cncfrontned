@@ -9,6 +9,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../context/AlertContext';
+import AnimatedTouchable from '../../components/AnimatedTouchable';
+import SkeletonCard from '../../components/SkeletonCard';
+import OrderSuccessModal from '../../components/OrderSuccessModal';
 
 const OrdersScreen = ({ route, navigation }) => {
   const { t } = useTranslation();
@@ -21,11 +24,20 @@ const OrdersScreen = ({ route, navigation }) => {
   // New Order State
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
-  const [material, setMaterial] = useState('');
+  
+  const MATERIALS = [
+    { id: 'MDF', name: 'MDF Board', rate: 80 },
+    { id: 'Acrylic', name: 'Acrylic Sheet', rate: 200 },
+    { id: 'Teak', name: 'Teak Wood', rate: 300 },
+    { id: 'Plywood', name: 'Plywood', rate: 100 },
+  ];
+  
+  const [selectedMaterial, setSelectedMaterial] = useState(MATERIALS[0]);
   const [notes, setNotes] = useState('');
   const [customImage, setCustomImage] = useState(null);
   const [referenceDesign, setReferenceDesign] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -61,7 +73,7 @@ const OrdersScreen = ({ route, navigation }) => {
   };
 
   const submitOrder = async () => {
-    if (!width || !height || !material || (!customImage && !referenceDesign)) {
+    if (!width || !height || !selectedMaterial || (!customImage && !referenceDesign)) {
       showAlert({ title: t('error'), message: t('fill_required'), type: 'error' });
       return;
     }
@@ -71,7 +83,7 @@ const OrdersScreen = ({ route, navigation }) => {
         const formData = new FormData();
         formData.append('width', width);
         formData.append('height', height);
-        formData.append('material', material);
+        formData.append('material', selectedMaterial.name);
         formData.append('notes', notes);
         
         if (referenceDesign) {
@@ -94,7 +106,7 @@ const OrdersScreen = ({ route, navigation }) => {
         const jsonData = {
           width,
           height,
-          material,
+          material: selectedMaterial.name,
           notes,
           referenceDesign: referenceDesign ? referenceDesign._id : undefined
         };
@@ -105,18 +117,27 @@ const OrdersScreen = ({ route, navigation }) => {
           }
         });
       }
-      
-      showAlert({ title: t('success'), message: t('order_success'), type: 'success' });
-      setIsCreating(false);
-      // Reset form
-      setWidth(''); setHeight(''); setMaterial(''); setNotes(''); setCustomImage(null); setReferenceDesign(null);
-      fetchOrders();
+      setShowSuccessModal(true);
     } catch (error) {
       showAlert({ title: t('error'), message: error.response?.data?.message || 'Something went wrong', type: 'error' });
     } finally {
       setSubmitting(false);
     }
   };
+
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false);
+    setIsCreating(false);
+    setWidth(''); setHeight(''); setSelectedMaterial(MATERIALS[0]); setNotes(''); setCustomImage(null); setReferenceDesign(null);
+    fetchOrders();
+  };
+
+  const estimatedPrice = React.useMemo(() => {
+    const w = parseFloat(width) || 0;
+    const h = parseFloat(height) || 0;
+    const sqFt = (w * h) / 144;
+    return Math.round(sqFt * selectedMaterial.rate);
+  }, [width, height, selectedMaterial]);
 
   const [expandedOrder, setExpandedOrder] = useState(null);
 
@@ -141,7 +162,7 @@ const OrdersScreen = ({ route, navigation }) => {
   const renderOrderItem = ({ item, index }) => {
     return (
       <Animated.View entering={FadeInDown.delay(index * 100).springify()}>
-        <View style={styles.orderCard}>
+        <AnimatedTouchable style={styles.orderCard} scaleTo={0.98} onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}>
           <View style={styles.orderHeader}>
             <Text style={styles.orderId}>Order #{item._id.slice(-6).toUpperCase()}</Text>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
@@ -161,11 +182,11 @@ const OrdersScreen = ({ route, navigation }) => {
           
           <View style={styles.orderFooter}>
             <Text style={styles.price}>₹{item.priceQuote || '---'}</Text>
-            <TouchableOpacity style={styles.trackBtn} onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}>
+            <View style={styles.trackBtn}>
               <Text style={styles.trackBtnText}>{t('track_order')}</Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </AnimatedTouchable>
       </Animated.View>
     );
   };
@@ -206,7 +227,21 @@ const OrdersScreen = ({ route, navigation }) => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('material')}</Text>
-            <TextInput style={styles.input} value={material} onChangeText={setMaterial} placeholderTextColor={COLORS.secondary} placeholder="e.g. MDF, Teak Wood, Acrylic" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.materialScroll}>
+              {MATERIALS.map((mat) => {
+                const isActive = selectedMaterial.id === mat.id;
+                return (
+                  <TouchableOpacity 
+                    key={mat.id} 
+                    style={[styles.materialChip, isActive && styles.materialChipActive]} 
+                    onPress={() => setSelectedMaterial(mat)}
+                  >
+                    <Text style={[styles.materialChipText, isActive && styles.materialChipTextActive]}>{mat.name}</Text>
+                    <Text style={[styles.materialRate, isActive && styles.materialRateActive]}>₹{mat.rate}/sq.ft</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
 
           <View style={styles.inputGroup}>
@@ -222,11 +257,20 @@ const OrdersScreen = ({ route, navigation }) => {
             />
           </View>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={submitOrder} disabled={submitting}>
+          <View style={styles.estimateContainer}>
+            <View>
+              <Text style={styles.estimateLabel}>Estimated Cost</Text>
+              <Text style={styles.estimateSubtext}>Based on {selectedMaterial.name} dimensions</Text>
+            </View>
+            <Text style={styles.estimatePrice}>₹{estimatedPrice}</Text>
+          </View>
+
+          <AnimatedTouchable style={styles.submitBtn} onPress={submitOrder} disabled={submitting} scaleTo={0.97}>
             {submitting ? <ActivityIndicator color="#000" /> : <Text style={styles.submitBtnText}>{t('submit_order')}</Text>}
-          </TouchableOpacity>
+          </AnimatedTouchable>
           <View style={{height: 100}} />
         </ScrollView>
+        <OrderSuccessModal visible={showSuccessModal} onClose={handleSuccessClose} />
       </SafeAreaView>
     );
   }
@@ -243,7 +287,12 @@ const OrdersScreen = ({ route, navigation }) => {
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <FlatList
+            data={[1, 2, 3]}
+            keyExtractor={(item) => item.toString()}
+            renderItem={() => <View style={{ width: '100%', marginBottom: 15 }}><SkeletonCard /></View>}
+            contentContainerStyle={styles.listContent}
+          />
         </View>
       ) : (
         <FlatList
@@ -301,6 +350,17 @@ const styles = StyleSheet.create({
   textArea: { height: 100, textAlignVertical: 'top' },
   submitBtn: { backgroundColor: COLORS.primary, padding: 18, borderRadius: SIZES.radius, alignItems: 'center', marginTop: 10 },
   submitBtnText: { color: '#000', fontSize: SIZES.fontLg, fontWeight: 'bold' },
+  materialScroll: { paddingVertical: 5 },
+  materialChip: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: SIZES.radius, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.surfaceLight, marginRight: 10, alignItems: 'center' },
+  materialChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  materialChipText: { color: COLORS.text, fontWeight: '600', marginBottom: 2 },
+  materialChipTextActive: { color: '#000' },
+  materialRate: { color: COLORS.secondary, fontSize: 10 },
+  materialRateActive: { color: 'rgba(0,0,0,0.7)' },
+  estimateContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.primary + '15', padding: 20, borderRadius: SIZES.radius, marginBottom: 20, borderWidth: 1, borderColor: COLORS.primary + '30' },
+  estimateLabel: { color: COLORS.text, fontSize: SIZES.fontLg, fontWeight: 'bold' },
+  estimateSubtext: { color: COLORS.secondary, fontSize: 12, marginTop: 4 },
+  estimatePrice: { color: COLORS.primary, fontSize: SIZES.fontXxl, fontWeight: '900' },
   // Timeline Styles
   timelineContainer: { marginTop: 10, marginBottom: 20, paddingHorizontal: 10, borderTopWidth: 1, borderTopColor: COLORS.surfaceLight, paddingTop: 15 },
   timelineStep: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, position: 'relative' },

@@ -9,6 +9,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAlert } from '../../context/AlertContext';
+import SkeletonCard from '../../components/SkeletonCard';
+import AnimatedTouchable from '../../components/AnimatedTouchable';
 
 const { width } = Dimensions.get('window');
 const cardWidth = width / 2 - 25;
@@ -21,6 +23,7 @@ const ExploreScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [savedDesignIds, setSavedDesignIds] = useState(new Set());
   const { userToken } = useContext(AuthContext);
   const { showAlert } = useAlert();
@@ -83,12 +86,13 @@ const ExploreScreen = ({ navigation }) => {
   };
 
   const renderCategory = ({ item }) => (
-    <TouchableOpacity 
+    <AnimatedTouchable 
       style={[styles.categoryBtn, activeCategory === item && styles.categoryBtnActive]}
       onPress={() => setActiveCategory(item)}
+      scaleTo={0.9}
     >
       <Text style={[styles.categoryText, activeCategory === item && styles.categoryTextActive]}>{item}</Text>
-    </TouchableOpacity>
+    </AnimatedTouchable>
   );
 
   const renderDesignCard = ({ item, index }) => {
@@ -96,22 +100,23 @@ const ExploreScreen = ({ navigation }) => {
     
     return (
       <Animated.View entering={FadeInDown.delay(index * 100).springify()} style={styles.cardContainer}>
-        <TouchableOpacity 
+        <AnimatedTouchable 
           style={styles.card} 
-          activeOpacity={0.8}
+          activeOpacity={0.9}
+          scaleTo={0.97}
           onPress={() => navigation.navigate('DesignDetails', { design: item })}
         >
           <Image source={{ uri: displayImage }} style={styles.cardImage} />
           
           <View style={styles.cardOverlay}>
-            <TouchableOpacity style={styles.saveBtn} onPress={() => handleSaveToggle(item._id)}>
+            <AnimatedTouchable style={styles.saveBtn} onPress={() => handleSaveToggle(item._id)} scaleTo={0.8}>
               <Icon 
                 name="bookmark" 
                 size={16} 
                 color={savedDesignIds.has(item._id) ? COLORS.primary : COLORS.text} 
                 solid={savedDesignIds.has(item._id)} 
               />
-            </TouchableOpacity>
+            </AnimatedTouchable>
           </View>
 
           {item.imageUrls && item.imageUrls.length > 1 && (
@@ -124,7 +129,7 @@ const ExploreScreen = ({ navigation }) => {
             <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
             <Text style={styles.cardCategory}>{item.category}</Text>
           </View>
-        </TouchableOpacity>
+        </AnimatedTouchable>
       </Animated.View>
     );
   };
@@ -142,16 +147,18 @@ const ExploreScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={18} color={COLORS.secondary} style={styles.searchIcon} />
+      <Animated.View style={[styles.searchContainer, searchFocused && { borderColor: COLORS.primary, shadowColor: COLORS.primary, shadowOpacity: 0.2, shadowRadius: 10, elevation: 5 }]}>
+        <Icon name="search" size={18} color={searchFocused ? COLORS.primary : COLORS.secondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder={t('search_designs')}
           placeholderTextColor={COLORS.secondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
         />
-      </View>
+      </Animated.View>
 
       <View style={styles.categoriesContainer}>
         <FlatList
@@ -166,7 +173,14 @@ const ExploreScreen = ({ navigation }) => {
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <FlatList
+            data={[1, 2, 3, 4, 5, 6]}
+            numColumns={2}
+            keyExtractor={(item) => item.toString()}
+            renderItem={() => <SkeletonCard />}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
         </View>
       ) : (
         <FlatList

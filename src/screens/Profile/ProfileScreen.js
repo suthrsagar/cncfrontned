@@ -9,6 +9,8 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../../context/AlertContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AnimatedTouchable from '../../components/AnimatedTouchable';
+import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 
 const ProfileScreen = ({ navigation }) => {
   const { t, i18n } = useTranslation();
@@ -83,14 +85,14 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const renderMenuItem = (icon, title, color = COLORS.text, onPress = null, showBadge = false) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+    <AnimatedTouchable style={styles.menuItem} onPress={onPress} scaleTo={0.97}>
       <View style={styles.menuIconWrap}>
         <Icon name={icon} size={18} color={color} />
       </View>
       <Text style={[styles.menuTitle, { color }]}>{title}</Text>
       {showBadge && <View style={styles.badge} />}
       <Icon name="chevron-right" size={14} color={COLORS.surfaceLight} />
-    </TouchableOpacity>
+    </AnimatedTouchable>
   );
 
   return (
@@ -110,19 +112,19 @@ const ProfileScreen = ({ navigation }) => {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Top Premium Profile Card */}
-          <View style={styles.profileCard}>
+          <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.profileCard}>
             <View style={styles.profileHeaderRow}>
               <View>
                 <Text style={styles.welcomeText}>{t('welcome_back')}</Text>
                 <Text style={styles.name}>{profile?.name}</Text>
               </View>
-              <TouchableOpacity style={styles.avatarContainer} onPress={changeProfileImage}>
+              <AnimatedTouchable style={styles.avatarContainer} onPress={changeProfileImage} scaleTo={0.9}>
                 {uploadingImage ? (
                   <View style={styles.avatarPlaceholder}>
                     <ActivityIndicator color={COLORS.primary} />
                   </View>
                 ) : profile?.avatarUrl ? (
-                  <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+                  <Animated.Image entering={FadeInUp} source={{ uri: profile.avatarUrl }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <Text style={styles.avatarText}>{profile?.name?.charAt(0).toUpperCase()}</Text>
@@ -131,7 +133,7 @@ const ProfileScreen = ({ navigation }) => {
                 <View style={styles.editAvatarBadge}>
                   <Icon name="camera" size={10} color="#000" />
                 </View>
-              </TouchableOpacity>
+              </AnimatedTouchable>
             </View>
             <View style={styles.contactInfo}>
               <View style={styles.contactRow}>
@@ -143,9 +145,9 @@ const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.phone}>{profile?.phone}</Text>
               </View>
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.sectionContainer}>
+          <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>{t('account_settings')}</Text>
             <View style={styles.cardBlock}>
               {renderMenuItem('user-edit', t('edit_profile'))}
@@ -153,9 +155,9 @@ const ProfileScreen = ({ navigation }) => {
               {renderMenuItem('bookmark', t('saved_designs'), COLORS.text, () => navigation.navigate('MainTabs', { screen: 'Saved' }))}
               {renderMenuItem('box-open', t('order_history'), COLORS.text, () => navigation.navigate('MainTabs', { screen: 'Orders' }))}
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.sectionContainer}>
+          <Animated.View entering={FadeInDown.duration(500).delay(300)} style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>{t('customer_support')}</Text>
             <View style={styles.cardBlock}>
               {renderMenuItem('headset', t('chat_admin'), COLORS.primary, () => navigation.navigate('CustomerSupport'), true)}
@@ -163,9 +165,9 @@ const ProfileScreen = ({ navigation }) => {
               {renderMenuItem('phone', t('call_support'), COLORS.text)}
               {renderMenuItem('question-circle', t('help_center'))}
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.sectionContainer}>
+          <Animated.View entering={FadeInDown.duration(500).delay(400)} style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>{t('more')}</Text>
             <View style={styles.cardBlock}>
               {renderMenuItem('globe', t('language_settings') + (i18n.language === 'en' ? ' (English)' : ' (हिन्दी)'), COLORS.text, toggleLanguage)}
@@ -176,12 +178,14 @@ const ProfileScreen = ({ navigation }) => {
               {renderMenuItem('file-contract', t('privacy_policy'))}
               {renderMenuItem('info-circle', t('about_workshop'))}
             </View>
-          </View>
+          </Animated.View>
 
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Icon name="sign-out-alt" size={18} color={COLORS.error} />
-            <Text style={styles.logoutBtnText}>{t('logout')}</Text>
-          </TouchableOpacity>
+          <Animated.View entering={FadeInDown.duration(500).delay(500)}>
+            <AnimatedTouchable style={styles.logoutBtn} onPress={handleLogout} scaleTo={0.95}>
+              <Icon name="sign-out-alt" size={18} color={COLORS.error} />
+              <Text style={styles.logoutBtnText}>{t('logout')}</Text>
+            </AnimatedTouchable>
+          </Animated.View>
           
           <View style={{height: 100}} />
         </ScrollView>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "705564172018",
+    "project_id": "woodcraft-d1306",
+    "storage_bucket": "woodcraft-d1306.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:705564172018:android:0ed8c9cd8ab1c1efe4ba6b",
+        "android_client_info": {
+          "package_name": "com.woodcraftcnc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNQMxgVthGEKGN0iweF7hk5_BHLUAuelY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
